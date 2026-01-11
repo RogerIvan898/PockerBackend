@@ -2,7 +2,7 @@ use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
 use tokio::sync::{oneshot};
 
-use crate::models::{Card, Player, PlayerAction, PublicPlayer};
+use crate::domain::{Card, Player, PlayerAction, PublicPlayer};
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct PublicGameState {

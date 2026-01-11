@@ -1,14 +1,14 @@
 mod app;
-mod web_socket;
-mod models;
-mod constants;
+mod infrastructure;
+mod domain;
+mod shared;
 mod game;
 
 use std::net::SocketAddr;
 use tracing_subscriber;
 use anyhow::Result;
 
-use crate::constants::server::{SERVER_ADDRESS, SERVER_PORT};
+use crate::shared::{SERVER_ADDRESS, SERVER_PORT};
 use crate::game::GameManager;
 
 #[tokio::main]

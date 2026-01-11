@@ -1,6 +1,6 @@
 use serde::{Serialize, Deserialize};
 
-use crate::models::{Card};
+use crate::domain::{Card};
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Player {

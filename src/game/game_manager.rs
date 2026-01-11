@@ -3,7 +3,7 @@ use uuid::Uuid;
 use rand::{rngs::StdRng, SeedableRng};
 use rand::seq::SliceRandom;
 
-use crate::models::{
+use crate::domain::{
     Card, PlayerStatus, PrivateState, PublicGameState, PublicPlayer,
     Rank, RoundPhase, ServerEvent, Suit,
 };

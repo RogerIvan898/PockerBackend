@@ -1,6 +1,6 @@
 use serde::{Serialize, Deserialize};
 
-use crate::models::{Card, PrivateState, PublicGameState};
+use crate::domain::{Card, PrivateState, PublicGameState};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", content = "data")]

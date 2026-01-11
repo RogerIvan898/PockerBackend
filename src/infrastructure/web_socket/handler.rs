@@ -2,12 +2,11 @@ use axum::{
     extract::ws::{Message, WebSocket, WebSocketUpgrade},
     response::IntoResponse,
 };
-
 use tokio::sync::{mpsc, broadcast, oneshot};
 use serde::Deserialize;
 
 use crate::game::{GameCommand, PlayerAction};
-use crate::models::ServerEvent;
+use crate::domain::ServerEvent;
 
 pub async fn ws_handler(
     ws: WebSocketUpgrade,
@@ -22,7 +21,6 @@ async fn handle_socket(
     manager_tx: mpsc::Sender<GameCommand>,
     broadcaster: broadcast::Sender<ServerEvent>,
 ) {
-    // IMPORTANT: subscribe before sending Join to avoid race where RoundStarted is missed
     let mut events = broadcaster.subscribe();
 
     let (join_tx, join_rx) = oneshot::channel();
@@ -42,15 +40,12 @@ async fn handle_socket(
             ev = events.recv() => {
                 match ev {
                     Ok(server_event) => {
-                        // always forward public events
                         if socket.send(Message::Text(serde_json::to_string(&server_event).unwrap())).await.is_err() {
                             break;
                         }
 
-                        // for RoundStarted, ask actor for private state and send only to this socket
                         if let ServerEvent::RoundStarted = server_event {
                             let (p_tx, p_rx) = oneshot::channel();
-                            // request private state from actor
                             let _ = manager_tx.send(GameCommand::GetPrivateState { player_id: player_id.clone(), reply: p_tx }).await;
                             if let Ok(private) = p_rx.await {
                                 if private.hand.is_some() {
@@ -62,7 +57,6 @@ async fn handle_socket(
                         }
                     }
                     Err(broadcast::error::RecvError::Lagged(_)) => {
-                        // log and continue
                         tracing::warn!("[WS] {} lagged on events", player_id);
                     }
                     Err(broadcast::error::RecvError::Closed) => {
@@ -96,7 +90,7 @@ async fn handle_socket(
 
                         let (tx, rx) = oneshot::channel();
                         let _ = manager_tx.send(GameCommand::Action { player_id: player_id.clone(), action, reply: tx }).await;
-                        let _ = rx.await; // optionally inspect result
+                        let _ = rx.await;
                     }
 
                     Some(Ok(Message::Close(_))) | None => {
