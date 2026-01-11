@@ -5,36 +5,11 @@ use rand::seq::SliceRandom;
 
 use crate::domain::{
     Card, PlayerStatus, PrivateState, PublicGameState, PublicPlayer,
-    Rank, RoundPhase, ServerEvent, Suit,
+    Rank, RoundPhase, ServerEvent, Suit, CardStore, PlayerAction,
+    GameCommand
 };
 
-#[derive(Debug)]
-pub enum PlayerAction {
-    Fold,
-    Check,
-    Call,
-    Bet { amount: u64 },
-    Raise { amount: u64 },
-    AllIn,
-}
-
-pub enum GameCommand {
-    Join { reply: tokio::sync::oneshot::Sender<Result<String, String>> },
-    Action { player_id: String, action: PlayerAction, reply: tokio::sync::oneshot::Sender<Result<(), String>> },
-    Disconnect { player_id: String },
-    GetPrivateState { player_id: String, reply: tokio::sync::oneshot::Sender<PrivateState> },
-}
-
-pub struct CardStore {
-    pub hands: std::collections::HashMap<String, [Card; 2]>,
-    pub deck: Vec<Card>,
-}
-
-impl CardStore {
-    pub fn new() -> Self {
-        Self { hands: Default::default(), deck: Vec::new() }
-    }
-}
+use crate::game::constants::{COMMAND_CHANNEL_CAPACITY, FLOP_CARDS, MAX_PLAYERS} 
 
 pub struct GameManager {
     pub state: PublicGameState,
@@ -65,7 +40,7 @@ impl GameManager {
     }
 
     pub fn start() -> (mpsc::Sender<GameCommand>, broadcast::Sender<ServerEvent>) {
-        let (tx_cmd, rx_cmd) = mpsc::channel::<GameCommand>(256);
+        let (tx_cmd, rx_cmd) = mpsc::channel::<GameCommand>(COMMAND_CHANNEL_CAPACITY);
         let mut manager = GameManager::new();
         let broadcaster = manager.broadcaster.clone();
         tokio::spawn(async move { manager.run(rx_cmd).await; });
@@ -96,7 +71,7 @@ impl GameManager {
     }
 
     fn add_waiting_player(&mut self) -> Result<String, String> {
-        if self.state.players.len() >= 9 {
+        if self.state.players.len() >= MAX_PLAYERS {
             return Err("Table full".into());
         }
 
@@ -116,6 +91,7 @@ impl GameManager {
         if matches!(self.state.phase, RoundPhase::Waiting) {
             let active_count = self.state.players.iter().filter(|p| p.status == PlayerStatus::Active).count();
             let waiting_count = self.state.players.iter().filter(|p| p.status == PlayerStatus::Waiting).count();
+            
             if active_count + waiting_count >= 2 {
                 for p in &mut self.state.players {
                     if p.status == PlayerStatus::Waiting {
@@ -202,9 +178,11 @@ impl GameManager {
         self.init_deck();
         self.state.community_cards.clear();
         self.state.pot = 0;
+
         for p in &mut self.state.players {
             p.committed = 0;
         }
+
         self.cards.hands.clear();
     }
 
@@ -228,7 +206,7 @@ impl GameManager {
 
     fn deal_flop(&mut self) {
         self.burn();
-        for _ in 0..3 {
+        for _ in 0..FLOP_CARDS {
             if let Some(c) = self.cards.deck.pop() {
                 self.state.community_cards.push(c);
             }

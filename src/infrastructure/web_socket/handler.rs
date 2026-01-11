@@ -5,8 +5,7 @@ use axum::{
 use tokio::sync::{mpsc, broadcast, oneshot};
 use serde::Deserialize;
 
-use crate::game::{GameCommand, PlayerAction};
-use crate::domain::ServerEvent;
+use crate::domain::{ServerEvent, PlayerAction, GameCommand};
 
 pub async fn ws_handler(
     ws: WebSocketUpgrade,

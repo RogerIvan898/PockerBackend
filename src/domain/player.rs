@@ -1,6 +1,7 @@
 use serde::{Serialize, Deserialize};
 
-use crate::domain::{Card};
+use crate::{domain::Card};
+use crate::shared::INITIAL_HAND_SIZE;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Player {
@@ -24,12 +25,12 @@ pub struct PublicPlayer {
 #[derive(Serialize)]
 pub struct RevealedHand {
     pub seat: usize,
-    pub hand: [Card; 2],
+    pub hand: [Card; INITIAL_HAND_SIZE],
 }
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct PrivateState {
-    pub hand: Option<[Card; 2]>
+    pub hand: Option<[Card; INITIAL_HAND_SIZE]>
 }
 
 #[derive(Clone, Serialize, Deserialize, PartialEq, Eq)]

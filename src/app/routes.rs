@@ -1,8 +1,7 @@
 use axum::{Router, routing::get};
 use tokio::sync::{mpsc, broadcast};
 
-use crate::game::GameCommand;
-use crate::domain::ServerEvent;
+use crate::domain::{ServerEvent, GameCommand};
 use crate::infrastructure::ws_handler;
 
 pub fn create_routes(

@@ -2,7 +2,8 @@ use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
 use tokio::sync::{oneshot};
 
-use crate::domain::{Card, Player, PlayerAction, PublicPlayer};
+use crate::domain::{Card, PlayerAction, PublicPlayer, PrivateState};
+use crate::shared::INITIAL_HAND_SIZE;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct PublicGameState {
@@ -28,7 +29,7 @@ pub enum RoundPhase {
 }
 
 pub struct CardStore {
-    pub hands: HashMap<String, [Card; 2]>,
+    pub hands: HashMap<String, [Card; INITIAL_HAND_SIZE]>,
     pub deck: Vec<Card>,
 }
 
@@ -36,4 +37,5 @@ pub enum GameCommand {
     Join { reply: oneshot::Sender<Result<String, String>> },
     Action { player_id: String, action: PlayerAction, reply: oneshot::Sender<Result<(), String>> },
     Disconnect { player_id: String },
+    GetPrivateState { player_id: String, reply: oneshot::Sender<PrivateState> },
 }
