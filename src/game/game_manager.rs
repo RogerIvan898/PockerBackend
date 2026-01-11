@@ -9,7 +9,7 @@ use crate::domain::{
     GameCommand
 };
 
-use crate::game::constants::{COMMAND_CHANNEL_CAPACITY, FLOP_CARDS, MAX_PLAYERS} 
+use crate::game::constants::{COMMAND_CHANNEL_CAPACITY, FLOP_CARDS, MAX_PLAYERS};
 
 pub struct GameManager {
     pub state: PublicGameState,
@@ -43,7 +43,9 @@ impl GameManager {
         let (tx_cmd, rx_cmd) = mpsc::channel::<GameCommand>(COMMAND_CHANNEL_CAPACITY);
         let mut manager = GameManager::new();
         let broadcaster = manager.broadcaster.clone();
+        
         tokio::spawn(async move { manager.run(rx_cmd).await; });
+        
         (tx_cmd, broadcaster)
     }
 
@@ -196,6 +198,7 @@ impl GameManager {
         for pid in active_ids {
             let c1 = self.cards.deck.pop().expect("deck empty when dealing hole cards");
             let c2 = self.cards.deck.pop().expect("deck empty when dealing hole cards");
+            
             self.cards.hands.insert(pid, [c1, c2]);
         }
     }
