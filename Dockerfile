@@ -1,4 +1,3 @@
-# Stage 1: сборка
 FROM rust:1.89 AS builder
 
 WORKDIR /usr/src/server
@@ -10,10 +9,8 @@ RUN cargo fetch
 COPY . .
 RUN cargo build --release
 
-# Stage 2: runtime
 FROM debian:bookworm-slim
 
-# копируем бинарь из builder stage (именно "builder")
 COPY --from=builder /usr/src/server/target/release/ws_cards_server /usr/local/bin/ws_cards_server
 
 EXPOSE 8080
